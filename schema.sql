@@ -18,7 +18,7 @@ CREATE TABLE "Location" (
     "user_id" INTEGER,
     "state" TEXT,
     "city" TEXT,
-    "postalcode" NUMERIC,
+    "postalcode" NUMERIC NOT NULL UNIQUE,
     "street" TEXT,
     FOREIGN KEY("user_id") REFERENCES "Users"("id") ON DELETE CASCADE
 );
