@@ -78,10 +78,7 @@ CREATE TABLE "Business" (
     "owner_id" INTEGER,
     "name" TEXT NOT NULL,
     "phone_no" NUMERIC,
-    "state" TEXT,
-    "city" TEXT,
-    "postalcode" NUMERIC,
-    "street" TEXT,
+
     PRIMARY KEY("id"),
     FOREIGN KEY("owner_id") REFERENCES "Sellers"("id") ON DELETE CASCADE
 );
