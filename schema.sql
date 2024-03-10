@@ -305,15 +305,49 @@ CREATE TABLE "Orders" (
     FOREIGN KEY ("item_id") REFERENCES "Items"("item_id") ON DELETE CASCADE
 );
 
--- add trigger to automatically update total_price (Prashant)
+-- -- add trigger to automatically update total_price (Prashant)
+-- DROP TABLE IF EXISTS "ShoppingCart";
+-- CREATE TABLE "ShoppingCart" (
+--     "cart_id" INTEGER PRIMARY KEY AUTOINCREMENT,
+--     "user_id" INTEGER NOT NULL,
+--     "total_price" DECIMAL(10,2) NOT NULL,
+--     FOREIGN KEY ("user_id") REFERENCES "Customers"("user_id") ON DELETE CASCADE
+-- );
+
+-- --------------------
+-- Writing the trigger to automatically update the total_price as we add items in the cart
 DROP TABLE IF EXISTS "ShoppingCart";
 CREATE TABLE "ShoppingCart" (
     "cart_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "user_id" INTEGER NOT NULL,
-    "total_price" DECIMAL(10,2) NOT NULL,
+    "total_price" DECIMAL(10,2) NOT NULL DEFAULT 0,
     FOREIGN KEY ("user_id") REFERENCES "Customers"("user_id") ON DELETE CASCADE
 );
+DROP TABLE IF EXISTS "ItemsInCart";
+CREATE TABLE ItemsInCart (
+    "cart_id" INTEGER NOT NULL,
+    "item_id" INTEGER NOT NULL,
+    "quantity" INTEGER NOT NULL,
+    "price" DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY("cart_id") REFERENCES ShoppingCart(cart_id) ON DELETE CASCADE,
+    FOREIGN KEY("item_id") REFERENCES Items(item_id) ON DELETE CASCADE
+);
+DROP TRIGGER IF EXISTS trg_update_total_price;
 
+--this is the trigger that i have added
+CREATE TRIGGER trg_update_total_price
+AFTER INSERT OR DELETE OR UPDATE OF quantity, price ON ItemsInCart
+FOR EACH ROW
+BEGIN
+    UPDATE ShoppingCart
+    SET total_price = (
+        SELECT IFNULL(SUM(price * quantity), 0)
+        FROM ItemsInCart
+        WHERE cart_id = COALESCE(NEW.cart_id, OLD.cart_id)
+    )
+    WHERE cart_id = COALESCE(NEW.cart_id, OLD.cart_id);
+END;
+-- this is the end of editing part
 CREATE INDEX "login_id_index" ON "users"("login_id");
 CREATE INDEX "history_index" ON "order_history"("user_id");
 CREATE INDEX "customer_feedback_index" ON "customer_feedback"("user_id");
