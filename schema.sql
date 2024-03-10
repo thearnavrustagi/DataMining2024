@@ -226,29 +226,10 @@ CREATE TABLE "ShippingMethods" (
     "method_name" TEXT
 );
 
-DROP TABLE IF EXISTS "Customers";
-CREATE TABLE "Customers" (
-    "user_id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "wallet_id" INTEGER NOT NULL,
-    "unique_cart_id" INTEGER NOT NULL UNIQUE,
 
-    FOREIGN KEY ("wallet_id") REFERENCES "Wallet"("wallet_id"),
-    FOREIGN KEY ("unique_cart_id") REFERENCES "ShoppingCart"("cart_id")
-);
 
-DROP TABLE IF EXISTS "Departments";
-CREATE TABLE "Departments" (
-    "department_id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "department_name" TEXT NOT NULL
-);
 
-DROP TABLE IF EXISTS "Categories";
-CREATE TABLE "Categories" (
-    "category_id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "category_name" TEXT NOT NULL,
-    "department_id" INTEGER,
-    FOREIGN KEY ("department_id") REFERENCES "Departments"("department_id") ON DELETE CASCADE
-);
+
 
 DROP TABLE IF EXISTS "Catalogs";
 CREATE TABLE "Catalogs" (
@@ -256,11 +237,7 @@ CREATE TABLE "Catalogs" (
     "catalog_name" TEXT NOT NULL
 );
 
-DROP TABLE IF EXISTS "Vendors";
-CREATE TABLE "Vendors" (
-    "vendor_id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "vendor_name" TEXT NOT NULL
-);
+
 
 DROP TABLE IF EXISTS "Items";
 CREATE TABLE "Items" (
@@ -271,10 +248,7 @@ CREATE TABLE "Items" (
     FOREIGN KEY ("vendor_id") REFERENCES "Vendors"("vendor_id") ON DELETE CASCADE
 );
 
-DROP TABLE IF EXISTS "Customers";
-CREATE TABLE "Customers" (
-    "user_id" INTEGER PRIMARY KEY AUTOINCREMENT
-);
+
 
 DROP TABLE IF EXISTS "Orders";
 CREATE TABLE "Orders" (
@@ -297,13 +271,7 @@ CREATE TABLE "Orders" (
 
 -- --------------------
 -- Writing the trigger to automatically update the total_price as we add items in the cart
-DROP TABLE IF EXISTS "ShoppingCart";
-CREATE TABLE "ShoppingCart" (
-    "cart_id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "user_id" INTEGER NOT NULL,
-    "total_price" DECIMAL(10,2) NOT NULL DEFAULT 0,
-    FOREIGN KEY ("user_id") REFERENCES "Customers"("user_id") ON DELETE CASCADE
-);
+
 DROP TABLE IF EXISTS "ItemsInCart";
 CREATE TABLE ItemsInCart (
     "cart_id" INTEGER NOT NULL,
@@ -313,6 +281,7 @@ CREATE TABLE ItemsInCart (
     FOREIGN KEY("cart_id") REFERENCES ShoppingCart(cart_id) ON DELETE CASCADE,
     FOREIGN KEY("item_id") REFERENCES Items(item_id) ON DELETE CASCADE
 );
+--Removing the unnecessary tables - Vijeta
 DROP TRIGGER IF EXISTS trg_update_total_price;
 
 --this is the trigger that i have added
