@@ -8,8 +8,9 @@ CREATE TABLE "Users" (
     "hashed_password" TEXT NOT NULL,
     "phone" NUMERIC NOT NULL,
     "role" TEXT NOT NULL CHECK("role" IN ('buyer', 'seller', 'both')),
-    -- soft deletion (vijeta)
-    -- prime membership (vieta)
+    "deleted" INTEGER DEFAULT 0, -- Soft deletion flag. 0 for active, 1 for deleted
+    "prime_membership" INTEGER DEFAULT 0, -- Prime membership flag. 0 for not prime, 1 for prime
+    PRIMARY KEY("id")
     PRIMARY KEY("id")
 );
 
@@ -24,20 +25,28 @@ CREATE TABLE "Location" (
 );
 
 -- updated using a trigger (vijeta)
-DROP TABLE IF EXISTS "Order_History";
-CREATE TABLE "Order_History" (
+-- add trigger to add order_history (Arnav)
+DROP TABLE IF EXISTS "OrderHistory";
+CREATE TABLE "OrderHistory" (
     "order_id" INTEGER NOT NULL,
     "item_id" INTEGER NOT NULL,
     "user_id" INTEGER,
     "amount" NUMERIC NOT NULL CHECK("amount" != 0),
-    "payment_method" TEXT,
+    "payment_method" INTEGER NOT NULL,
     "date" NUMERIC NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" TEXT NOT NULL CHECK("status" IN ('pending', 'delivered', 'cancelled')),
     PRIMARY KEY("order_id"),
-
     FOREIGN KEY("user_id") REFERENCES "Users"("id") ON DELETE CASCADE,
     FOREIGN KEY("item_id") REFERENCES "Items"("id")
+    FOREIGN KEY ( "payment_method" ) REFERENCES "PaymentMethods"("method_id")
 );
+-- Create the trigger function
+CREATE TRIGGER order_placed_trigger AFTER INSERT ON "Order"
+BEGIN
+    INSERT INTO "OrderHistory" ("order_id", "item_id", "user_id", "amount", "payment_method", "date", "status")
+    VALUES (NEW."order_id", NEW."item_id", NEW."user_id", NEW."amount", NEW."payment_method", CURRENT_TIMESTAMP, 'pending');
+END;
+
 
 DROP TABLE IF EXISTS "Customer_Feedback";
 CREATE TABLE "Customer_Feedback" (
@@ -98,6 +107,10 @@ CREATE TABLE "Items" (
     FOREIGN KEY("vendor_id") REFERENCES "Vendor"("vendor_id") ON DELETE SET DEFAULT,
     FOREIGN KEY("seller_id") REFERENCES "Seller"("seller_id") ON DELETE SET DEFAULT
 );
+CREATE VIEW AvailableItems AS
+SELECT *
+FROM "Items"
+WHERE "quantity" > 0;
 
 DROP TABLE IF EXISTS "Warehouses";
 CREATE TABLE "Warehouses" (
@@ -106,16 +119,9 @@ CREATE TABLE "Warehouses" (
     "street_name" TEXT DEFAULT NULL,
     "city_name" TEXT DEFAULT NULL,
     "zip_code" INTEGER DEFAULT NULL,
-    "state_id" INTEGER NOT NULL,
-
-    FOREIGN KEY ("state_id") REFERENCES "States"("state_id")
+    
 );
 
-DROP TABLE IF EXISTS "States";
-CREATE TABLE "States" (
-    "state_id" INTEGER PRIMARY KEY AUTOINCREMENT,
-    "state_name" TEXT NOT NULL
-);
 
 DROP TABLE IF EXISTS "ItemsWarehouses";
 CREATE TABLE "ItemsWarehouses" (
@@ -153,20 +159,6 @@ CREATE TABLE "ItemsOrders" (
     "order_id" INTEGER UNIQUE
 );
 
--- add trigger to add order_history (Arnav)
-DROP TABLE IF EXISTS "OrderHistory";
-CREATE TABLE "OrderHistory" (
-    "user_id" INTEGER UNIQUE,
-    "order_id" INTEGER UNIQUE,
-
-    "date_of_order" TEXT DEFAULT CURRENT_TIMESTAMP,
-    "payment_method" INTEGER NOT NULL,
-    "order_summary" TEXT DEFAULT NULL,
-    "grand_total" REAL DEFAULT 0.0 NOT NULL,
-
-    FOREIGN KEY ( "payment_method" ) REFERENCES "PaymentMethods"("method_id")
-);
-
 
 DROP TABLE IF EXISTS "Wallet";
 CREATE TABLE "Wallet" (
@@ -176,10 +168,8 @@ CREATE TABLE "Wallet" (
     "zip_code" INTEGER DEFAULT NULL,
     
     "user_id" INTEGER NOT NULL,
-    "state_id" INTEGER NOT NULL,
 
-    FOREIGN KEY ("user_id") REFERENCES "Users"("user_id") ON DELETE CASCADE,
-    FOREIGN KEY ("state_id") REFERENCES "States"("state_id")
+    FOREIGN KEY ("user_id") REFERENCES "Users"("user_id") ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS "Invoice";
@@ -192,13 +182,6 @@ CREATE TABLE "Invoice" (
     FOREIGN KEY ("seller_id") REFERENCES "Seller"("seller_id")
 );
 
-DROP TABLE IF EXISTS "Seller";
-CREATE TABLE "Seller" (
-    "user_id" INTEGER PRIMARY KEY,
-    "tax_id" TEXT NOT NULL CHECK(length ( tax_id ) = 9) UNIQUE,
-    "state_tax_id" TEXT NOT NULL CHECK(length ( state_tax_id ) = 9),
-    "bank_info" TEXT DEFAULT NULL
-);
 
 -- add trigger on order placement payment gets updated (Arnav)
 DROP TABLE IF EXISTS "Payment";
@@ -232,10 +215,8 @@ CREATE TABLE "Shipping" (
     "street_name" TEXT DEFAULT NULL,
     "city_name" TEXT DEFAULT NULL,
     "zip_code" INTEGER DEFAULT NULL,
-    "state_id" INTEGER NOT NULL,
 
     FOREIGN KEY ("shipping_method") REFERENCES "ShippingMethods"("method_id") ON DELETE CASCADE,
-    FOREIGN KEY ("state_id") REFERENCES "States"("state_id")
 );
 
 -- default inserts
