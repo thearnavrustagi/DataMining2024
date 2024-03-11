@@ -260,6 +260,13 @@ BEGIN
     DELETE FROM Items WHERE item_id = NEW.item_id;
 END;
 
+
+--- View to see the prime membership 
+CREATE VIEW PrimeMembersView AS
+SELECT id, name, login_id, phone, role
+FROM Users
+WHERE prime_member = TRUE;
+
 -- Trigger to automatically update the total_price in ShoppingCart when ItemsInCart is updated
 CREATE TRIGGER UpdateTotalPrice
 AFTER INSERT  ON ItemsInCart
