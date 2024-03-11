@@ -1,7 +1,37 @@
--- Drop existing structures if they exist
-DROP VIEW IF EXISTS "AvailableItems"; 
+-- Drop existing indexes
+DROP INDEX IF EXISTS idx_users_name;
+DROP INDEX IF EXISTS idx_users_login_id;
+DROP INDEX IF EXISTS idx_users_phone;
+DROP INDEX IF EXISTS idx_location_user_id;
+DROP INDEX IF EXISTS idx_location_postalcode;
+DROP INDEX IF EXISTS idx_vendors_name;
+DROP INDEX IF EXISTS idx_items_name;
+DROP INDEX IF EXISTS idx_items_vendor_id;
+DROP INDEX IF EXISTS idx_items_price;
+DROP INDEX IF EXISTS idx_sellers_user_id;
+DROP INDEX IF EXISTS idx_sellers_state_taxid;
+DROP INDEX IF EXISTS idx_sellers_national_taxid;
+DROP INDEX IF EXISTS idx_orders_user_id;
+DROP INDEX IF EXISTS idx_orders_shipping_id;
+DROP INDEX IF EXISTS idx_orders_date;
+DROP INDEX IF EXISTS idx_customerfeedback_item_id;
+DROP INDEX IF EXISTS idx_customerfeedback_user_id;
+DROP VIEW IF EXISTS OrderDetails;
+DROP VIEW IF EXISTS MonthlySales;
+DROP VIEW IF EXISTS AverageRating;
+DROP VIEW IF EXISTS TotalRevenue;
+DROP VIEW IF EXISTS ActiveUsersView;
+
+-- Drop existing view
+DROP VIEW IF EXISTS "AvailableItems";
+PRAGMA foreign_keys=OFF;
+
+BEGIN TRANSACTION;
+
+-- Drop tables
+DROP TABLE IF EXISTS "Users";
+DROP TABLE IF EXISTS "Location";
 DROP TABLE IF EXISTS "OrderHistory";
-DROP TABLE IF EXISTS "Orders";
 DROP TABLE IF EXISTS "Customer_Feedback";
 DROP TABLE IF EXISTS "Sellers";
 DROP TABLE IF EXISTS "Sold_By";
@@ -10,6 +40,7 @@ DROP TABLE IF EXISTS "Items";
 DROP TABLE IF EXISTS "Warehouses";
 DROP TABLE IF EXISTS "Vendors";
 DROP TABLE IF EXISTS "ItemsWarehouses";
+DROP TABLE IF EXISTS "Orders";
 DROP TABLE IF EXISTS "PaymentMethods";
 DROP TABLE IF EXISTS "ItemsOrders";
 DROP TABLE IF EXISTS "Wallet";
@@ -18,8 +49,16 @@ DROP TABLE IF EXISTS "Payment";
 DROP TABLE IF EXISTS "CreditCard";
 DROP TABLE IF EXISTS "Shipping";
 DROP TABLE IF EXISTS "ShippingMethods";
-DROP TABLE IF EXISTS "Location";
-DROP TABLE IF EXISTS "Users";
+
+-- Drop views
+DROP VIEW IF EXISTS "AvailableItems";
+DROP VIEW IF EXISTS "PrimeMembers";
+DROP VIEW IF EXISTS "PublicSellers";
+
+COMMIT;
+
+
+
 
 -- Create Users table
 CREATE TABLE "Users" (
@@ -42,6 +81,11 @@ CREATE TABLE "Location" (
     "street" TEXT,
     FOREIGN KEY("user_id") REFERENCES "Users"("id") ON DELETE CASCADE
 );
+CREATE VIEW PublicSellers AS
+SELECT Users.name AS seller_name, Business.name AS business_name, Users.phone AS phone_no
+FROM Users
+JOIN Sellers ON Users.id = Sellers.user_id
+JOIN Business ON Sellers.id = Business.owner_id;
 
 -- Create Vendors table
 CREATE TABLE "Vendors" (
@@ -65,6 +109,9 @@ CREATE VIEW AvailableItems AS
 SELECT *
 FROM "Items"
 WHERE "quantity" > 0;
+
+CREATE VIEW "PrimeMembers" AS
+SELECT * FROM "Users" WHERE "prime_membership" =1;
 
 -- Create Sellers table
 CREATE TABLE "Sellers" (
@@ -185,8 +232,8 @@ CREATE TABLE ItemsInCart (
 );
 DROP TABLE IF EXISTS "ItemsOrders";
 CREATE TABLE "ItemsOrders" (
-    "item_id" INTEGER UNIQUE,
-    "order_id" INTEGER UNIQUE
+    "item_id" INTEGER ,
+    "order_id" INTEGER
 );
 -- Create Invoice table
 CREATE TABLE "Invoice" (
@@ -260,26 +307,6 @@ BEGIN
     DELETE FROM Items WHERE item_id = NEW.item_id;
 END;
 
-
---- View to see the prime membership 
-CREATE VIEW PrimeMembersView AS
-SELECT id, name, login_id, phone, role
-FROM Users
-WHERE prime_member = TRUE;
-
--- View to see the active users (where is_deleted is false) 
-CREATE VIEW ActiveUsersView AS
-SELECT *
-FROM Users
-WHERE is_deleted = FALSE;
-
---View to see available items 
-CREATE VIEW AvailableItemsView AS
-SELECT item_id, item_name, item_price, quantity, condition
-FROM Items
-WHERE is_deleted = FALSE AND quantity > 0;
-
-
 -- Trigger to automatically update the total_price in ShoppingCart when ItemsInCart is updated
 CREATE TRIGGER UpdateTotalPrice
 AFTER INSERT  ON ItemsInCart
@@ -305,6 +332,24 @@ BEGIN
     SET total_price = (SELECT SUM(price * quantity) FROM ItemsInCart WHERE cart_id = NEW.cart_id)
     WHERE cart_id = NEW.cart_id;
 END;
+
+CREATE TRIGGER MoveCartItemsToOrder AFTER INSERT ON Orders
+FOR EACH ROW
+BEGIN
+    INSERT INTO ItemsOrders (order_id, item_id)
+    SELECT NEW.order_id, item_id FROM ShoppingCart
+    JOIN ItemsInCart ON ShoppingCart.cart_id = ItemsInCart.cart_id
+    WHERE ShoppingCart.user_id = NEW.user_id;
+
+    -- Update stock quantity in Items table or other necessary actions here
+END;
+
+CREATE TRIGGER AddToOrderHistory AFTER UPDATE ON Orders
+WHEN NEW.is_delivered = TRUE
+BEGIN
+    INSERT INTO OrderHistory (order_id, user_id, status) VALUES (NEW.order_id, NEW.user_id, 'Delivered');
+END;
+
 CREATE INDEX idx_users_name ON Users(name);
 CREATE INDEX idx_users_login_id ON Users(login_id);
 CREATE INDEX idx_users_phone ON Users(phone);
@@ -324,3 +369,25 @@ CREATE INDEX idx_orders_date ON Orders(date_of_order);
 CREATE INDEX idx_customerfeedback_item_id ON Customer_Feedback(item_id);
 CREATE INDEX idx_customerfeedback_user_id ON Customer_Feedback(user_id);
 
+CREATE VIEW OrderDetails AS
+SELECT Orders.order_id, Users.name AS user_name, Items.item_name, Items.item_price
+FROM Orders
+JOIN Users ON Orders.user_id = Users.id
+JOIN ItemsOrders ON Orders.order_id = ItemsOrders.order_id
+JOIN Items ON ItemsOrders.item_id = Items.item_id;
+CREATE VIEW MonthlySales AS
+SELECT strftime('%Y-%m', Orders.date_of_order) AS month, SUM(Orders.grand_total) AS total_sales
+FROM Orders
+GROUP BY month;
+CREATE VIEW AverageRating AS
+SELECT item_id, AVG(rating) AS avg_rating
+FROM Customer_Feedback
+GROUP BY item_id;
+CREATE VIEW TotalRevenue AS
+SELECT strftime('%Y-%m', Orders.date_of_order) AS month, SUM(Orders.grand_total) AS total_revenue
+FROM Orders
+GROUP BY month;
+CREATE VIEW ActiveUsersView AS
+SELECT *
+FROM Users
+WHERE deleted = FALSE;
