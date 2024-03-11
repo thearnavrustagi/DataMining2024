@@ -1,4 +1,3 @@
--- Drop existing indexes
 DROP INDEX IF EXISTS idx_users_name;
 DROP INDEX IF EXISTS idx_users_login_id;
 DROP INDEX IF EXISTS idx_users_phone;
@@ -22,13 +21,13 @@ DROP VIEW IF EXISTS AverageRating;
 DROP VIEW IF EXISTS TotalRevenue;
 DROP VIEW IF EXISTS ActiveUsersView;
 
--- Drop existing view
+
 DROP VIEW IF EXISTS "AvailableItems";
 PRAGMA foreign_keys=OFF;
 
 BEGIN TRANSACTION;
 
--- Drop tables
+
 DROP TABLE IF EXISTS "Users";
 DROP TABLE IF EXISTS "Location";
 DROP TABLE IF EXISTS "OrderHistory";
@@ -50,7 +49,7 @@ DROP TABLE IF EXISTS "CreditCard";
 DROP TABLE IF EXISTS "Shipping";
 DROP TABLE IF EXISTS "ShippingMethods";
 
--- Drop views
+
 DROP VIEW IF EXISTS "AvailableItems";
 DROP VIEW IF EXISTS "PrimeMembers";
 DROP VIEW IF EXISTS "PublicSellers";
@@ -60,24 +59,24 @@ COMMIT;
 
 
 
--- Create Users table
+
 CREATE TABLE "Users" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "name" TEXT NOT NULL,
     "login_id" TEXT NOT NULL UNIQUE,
     "hashed_password" TEXT NOT NULL,
-    "phone" TEXT NOT NULL, -- Changed from NUMERIC to TEXT to accommodate different phone number formats
+    "phone" TEXT NOT NULL,
     "role" TEXT NOT NULL CHECK("role" IN ('buyer', 'seller', 'both')),
     "deleted" INTEGER DEFAULT 0,
     "prime_membership" INTEGER DEFAULT 0
 );
 
--- Create Location table
+
 CREATE TABLE "Location" (
     "user_id" INTEGER,
     "state" TEXT,
     "city" TEXT,
-    "postalcode" TEXT NOT NULL UNIQUE, -- Changed from NUMERIC to TEXT to accommodate different postal code formats
+    "postalcode" TEXT NOT NULL UNIQUE, 
     "street" TEXT,
     FOREIGN KEY("user_id") REFERENCES "Users"("id") ON DELETE CASCADE
 );
@@ -87,13 +86,13 @@ FROM Users
 JOIN Sellers ON Users.id = Sellers.user_id
 JOIN Business ON Sellers.id = Business.owner_id;
 
--- Create Vendors table
+
 CREATE TABLE "Vendors" (
     "vendor_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "vendor_name" TEXT NOT NULL
 );
 
--- Create Items table
+
 CREATE TABLE "Items" (
     "item_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "item_price" REAL NOT NULL,
@@ -104,7 +103,7 @@ CREATE TABLE "Items" (
     FOREIGN KEY("vendor_id") REFERENCES "Vendors"("vendor_id") ON DELETE SET NULL
 );
 
--- Create AvailableItems view
+
 CREATE VIEW AvailableItems AS
 SELECT *
 FROM "Items"
@@ -113,11 +112,11 @@ WHERE "quantity" > 0;
 CREATE VIEW "PrimeMembers" AS
 SELECT * FROM "Users" WHERE "prime_membership" =1;
 
--- Create Sellers table
+
 CREATE TABLE "Sellers" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "user_id" INTEGER,
-    "state_taxID" TEXT, -- Changed from INTEGER as tax IDs can have different formats
+    "state_taxID" TEXT, 
     "national_taxID" TEXT NOT NULL,
     "account_no" TEXT NOT NULL,
     "IFSC_no" TEXT NOT NULL,
@@ -125,7 +124,7 @@ CREATE TABLE "Sellers" (
     FOREIGN KEY("user_id") REFERENCES "Users"("id") ON DELETE CASCADE
 );
 
--- Create Sold_By table
+
 CREATE TABLE "Sold_By" (
     "item_id" INTEGER,
     "seller_id" INTEGER,
@@ -134,21 +133,21 @@ CREATE TABLE "Sold_By" (
     FOREIGN KEY("seller_id") REFERENCES "Sellers"("id") ON DELETE CASCADE
 );
 
--- Create Business table
+
 CREATE TABLE "Business" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "owner_id" INTEGER,
     "name" TEXT NOT NULL,
-    "phone_no" TEXT, -- Changed from NUMERIC to TEXT for consistency
+    "phone_no" TEXT,
     FOREIGN KEY("owner_id") REFERENCES "Sellers"("id") ON DELETE CASCADE
 );
 
--- Create Orders table
+
 CREATE TABLE "Orders" (
     "order_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "user_id" INTEGER NOT NULL,
     "shipping_id" INTEGER NOT NULL,
-    "is_cancelled" INTEGER DEFAULT 0, -- Changed to INTEGER for clarity (0 for not cancelled, 1 for cancelled)
+    "is_cancelled" INTEGER DEFAULT 0, 
     "date_of_order" TEXT DEFAULT CURRENT_TIMESTAMP,
     "order_summary" TEXT,
     "grand_total" REAL NOT NULL DEFAULT 0.0,
@@ -158,9 +157,9 @@ CREATE TABLE "Orders" (
     FOREIGN KEY("payment_method") REFERENCES "PaymentMethods"("method_id")
 );
 
--- Create OrderHistory table
+
 CREATE TABLE "OrderHistory" (
-    "history_id" INTEGER PRIMARY KEY AUTOINCREMENT, -- Added a primary key
+    "history_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "order_id" INTEGER NOT NULL,
     "user_id" INTEGER,
     "amount" REAL NOT NULL CHECK("amount" > 0),
@@ -172,9 +171,8 @@ CREATE TABLE "OrderHistory" (
     FOREIGN KEY("payment_method") REFERENCES "PaymentMethods"("method_id")
 );
 
--- Other tables and triggers would be created here following similar corrections and consistency checks
 
--- Create Customer_Feedback table
+
 CREATE TABLE "Customer_Feedback" (
     "item_id" INTEGER,
     "user_id" INTEGER,
@@ -186,29 +184,29 @@ CREATE TABLE "Customer_Feedback" (
     FOREIGN KEY("user_id") REFERENCES "Users"("id") ON DELETE CASCADE
 );
 
--- Create PaymentMethods table
+
 CREATE TABLE "PaymentMethods" (
     "method_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "method_name" TEXT NOT NULL UNIQUE
 );
 
--- Create ShippingMethods table
+
 CREATE TABLE "ShippingMethods" (
     "method_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "method_name" TEXT NOT NULL UNIQUE
 );
 
--- Create Shipping table
+
 CREATE TABLE "Shipping" (
     "shipping_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "shipping_method" INTEGER NOT NULL,
     "street_name" TEXT,
     "city_name" TEXT,
-    "zip_code" TEXT, -- Changed from NUMERIC for consistency
+    "zip_code" TEXT, 
     FOREIGN KEY("shipping_method") REFERENCES "ShippingMethods"("method_id") ON DELETE CASCADE
 );
 
--- Create Wallet table
+
 CREATE TABLE "Wallet" (
     "wallet_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "user_id" INTEGER NOT NULL,
@@ -227,7 +225,6 @@ CREATE TABLE ItemsInCart (
     "item_id" INTEGER NOT NULL,
     "quantity" INTEGER NOT NULL,
     "price" DECIMAL(10, 2) NOT NULL,
-    --FOREIGN KEY("cart_id") REFERENCES ShoppingCart(cart_id) ON DELETE CASCADE,
     FOREIGN KEY("item_id") REFERENCES Items(item_id) ON DELETE CASCADE
 );
 DROP TABLE IF EXISTS "ItemsOrders";
@@ -235,7 +232,8 @@ CREATE TABLE "ItemsOrders" (
     "item_id" INTEGER ,
     "order_id" INTEGER
 );
--- Create Invoice table
+
+
 CREATE TABLE "Invoice" (
     "invoice_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "order_id" INTEGER NOT NULL,
@@ -244,7 +242,7 @@ CREATE TABLE "Invoice" (
     FOREIGN KEY("seller_id") REFERENCES "Sellers"("id")
 );
 
--- Create Payment table
+
 CREATE TABLE "Payment" (
     "payment_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "user_id" INTEGER NOT NULL,
@@ -255,24 +253,24 @@ CREATE TABLE "Payment" (
     FOREIGN KEY("payment_method") REFERENCES "PaymentMethods"("method_id")
 );
 
--- Create CreditCard table
+
 CREATE TABLE "CreditCard" (
     "card_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "type" TEXT NOT NULL CHECK("type" IN ('credit', 'debit')),
-    "security_code" TEXT NOT NULL CHECK(LENGTH(security_code) = 3 OR LENGTH(security_code) = 4), -- Updated for common CVV lengths
-    "expiration_date" TEXT NOT NULL, -- Fixed typo
+    "security_code" TEXT NOT NULL CHECK(LENGTH(security_code) = 3 OR LENGTH(security_code) = 4), 
+    "expiration_date" TEXT NOT NULL, 
     "card_holder_name" TEXT NOT NULL,
     "wallet_id" INTEGER NOT NULL,
     FOREIGN KEY("wallet_id") REFERENCES "Wallet"("wallet_id") ON DELETE CASCADE
 );
 
--- Create Warehouses table
+
 CREATE TABLE "Warehouses" (
     "warehouse_id" INTEGER PRIMARY KEY AUTOINCREMENT,
     "warehouse_name" TEXT NOT NULL,
     "street_name" TEXT,
     "city_name" TEXT,
-    "zip_code" TEXT -- Changed from NUMERIC for consistency
+    "zip_code" TEXT 
 );
 
 -- Create ItemsWarehouses table
@@ -285,12 +283,7 @@ CREATE TABLE "ItemsWarehouses" (
 );
 
 
--- Insert default data into PaymentMethods and ShippingMethods, if necessary
--- INSERT INTO "PaymentMethods" ("method_name") VALUES ('Visa'), ('MasterCard'), ('PayPal');
--- INSERT INTO "ShippingMethods" ("method_name") VALUES ('Standard'), ('Express'), ('Overnight');
 
--- Triggers and additional index creations can be added here as needed.
--- Trigger to add an entry to OrderHistory after a new order is inserted
 CREATE TRIGGER AddOrderHistory
 AFTER INSERT ON Orders
 FOR EACH ROW
@@ -298,7 +291,8 @@ BEGIN
     INSERT INTO OrderHistory(order_id, user_id, amount, status)
     VALUES (NEW.order_id, NEW.user_id, NEW.grand_total, 'pending');
 END;
--- Trigger to remove item from Items table if quantity is updated to 0
+
+
 CREATE TRIGGER RemoveItemWhenZero
 AFTER UPDATE ON Items
 FOR EACH ROW
@@ -307,7 +301,7 @@ BEGIN
     DELETE FROM Items WHERE item_id = NEW.item_id;
 END;
 
--- Trigger to automatically update the total_price in ShoppingCart when ItemsInCart is updated
+
 CREATE TRIGGER UpdateTotalPrice
 AFTER INSERT  ON ItemsInCart
 FOR EACH ROW
@@ -340,8 +334,6 @@ BEGIN
     SELECT NEW.order_id, item_id FROM ShoppingCart
     JOIN ItemsInCart ON ShoppingCart.cart_id = ItemsInCart.cart_id
     WHERE ShoppingCart.user_id = NEW.user_id;
-
-    -- Update stock quantity in Items table or other necessary actions here
 END;
 
 CREATE TRIGGER AddToOrderHistory AFTER UPDATE ON Orders
