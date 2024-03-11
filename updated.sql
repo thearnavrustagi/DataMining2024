@@ -267,6 +267,19 @@ SELECT id, name, login_id, phone, role
 FROM Users
 WHERE prime_member = TRUE;
 
+-- View to see the active users (where is_deleted is false) 
+CREATE VIEW ActiveUsersView AS
+SELECT *
+FROM Users
+WHERE is_deleted = FALSE;
+
+--View to see available items 
+CREATE VIEW AvailableItemsView AS
+SELECT item_id, item_name, item_price, quantity, condition
+FROM Items
+WHERE is_deleted = FALSE AND quantity > 0;
+
+
 -- Trigger to automatically update the total_price in ShoppingCart when ItemsInCart is updated
 CREATE TRIGGER UpdateTotalPrice
 AFTER INSERT  ON ItemsInCart
