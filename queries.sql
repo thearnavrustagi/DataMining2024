@@ -1,0 +1,20 @@
+--Basic Queries to Be Used
+SELECT * FROM Users;
+SELECT * FROM Orders WHERE user_id = <user_id>;
+SELECT * FROM Items;
+SELECT * FROM Orders;
+SELECT * FROM Items WHERE seller_id = <seller_id>;
+SELECT * FROM Invoice WHERE order_id = <order_id>;
+SELECT * FROM Customer_Feedback WHERE item_id = <item_id>;
+SELECT * FROM Items WHERE vendor_id = <vendor_id>;
+SELECT * FROM Orders WHERE shipping_id = <shipping_id>;
+SELECT * FROM Payment WHERE payment_method = <payment_method>;
+SELECT * FROM OrderDetails;
+SELECT * FROM MonthlySales;
+SELECT * FROM AverageRating;
+SELECT * FROM TotalRevenue;
+Select * from AvailableItems;
+select * from OrderHistory;
+select * from PrimeMembers;
+select * from PublicSellers;
+select * from ActiveUsersView;
