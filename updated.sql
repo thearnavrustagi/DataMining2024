@@ -1,5 +1,5 @@
 -- Drop existing structures if they exist
-DROP VIEW IF EXISTS "AvailableItems";
+DROP VIEW IF EXISTS "AvailableItems"; 
 DROP TABLE IF EXISTS "OrderHistory";
 DROP TABLE IF EXISTS "Orders";
 DROP TABLE IF EXISTS "Customer_Feedback";
