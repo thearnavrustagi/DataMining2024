@@ -1,31 +1,31 @@
 BEGIN TRANSACTION;
-INSERT INTO "Users" (name, login_id, hashed_password, phone, role) VALUES
-('Raj Kumar', 'rajkumar1', 'hash1', '9812345670', 'buyer'),
-('Priya Singh', 'priyasingh2', 'hash2', '9823456781', 'seller'),
-('Amit Patel', 'amitpatel3', 'hash3', '9834567892', 'buyer'),
-('Sunita Rao', 'sunitarao4', 'hash4', '9845678903', 'seller'),
-('Vijay Kumar', 'vijaykumar5', 'hash5', '9856789014', 'buyer'),
-('Anita Desai', 'anitadesai6', 'hash6', '9867890125', 'seller'),
-('Mohit Sharma', 'mohitsharma7', 'hash7', '9878901236', 'buyer'),
-('Kavita Krishnan', 'kavitakrishnan8', 'hash8', '9889012347', 'seller'),
-('Rahul Mehta', 'rahulmehta9', 'hash9', '9890123458', 'buyer'),
-('Deepika Iyer', 'deepikaiyer10', 'hash10', '9801234569', 'seller');
+INSERT INTO "Location" (state, city, postalcode, street) VALUES
+('Delhi', 'New Delhi', '110001', 'Janpath'),
+('Maharashtra', 'Mumbai', '400001', 'Colaba'),
+('Karnataka', 'Bangalore', '560001', 'MG Road'),
+('West Bengal', 'Kolkata', '700001', 'Park Street'),
+('Tamil Nadu', 'Chennai', '600001', 'Marina Beach Road'),
+('Gujarat', 'Ahmedabad', '380001', 'C.G. Road'),
+('Rajasthan', 'Jaipur', '302001', 'JLN Marg'),
+('Telangana', 'Hyderabad', '500001', 'Banjara Hills'),
+('Punjab', 'Chandigarh', '160001', 'Sector 17'),
+('Uttar Pradesh', 'Lucknow', '226001', 'Hazratganj');
 COMMIT;
-
 
 BEGIN TRANSACTION;
-INSERT INTO "Location" (user_id, state, city, postalcode, street) VALUES
-(1, 'Delhi', 'New Delhi', '110001', 'Janpath'),
-(2, 'Maharashtra', 'Mumbai', '400001', 'Colaba'),
-(3, 'Karnataka', 'Bangalore', '560001', 'MG Road'),
-(4, 'West Bengal', 'Kolkata', '700001', 'Park Street'),
-(5, 'Tamil Nadu', 'Chennai', '600001', 'Marina Beach Road'),
-(6, 'Gujarat', 'Ahmedabad', '380001', 'C.G. Road'),
-(7, 'Rajasthan', 'Jaipur', '302001', 'JLN Marg'),
-(8, 'Telangana', 'Hyderabad', '500001', 'Banjara Hills'),
-(9, 'Punjab', 'Chandigarh', '160001', 'Sector 17'),
-(10, 'Uttar Pradesh', 'Lucknow', '226001', 'Hazratganj');
+INSERT INTO "Users" (name, login_id, hashed_password, phone, role, location_id) VALUES
+('Raj Kumar', 'rajkumar1', 'hash1', '9812345670', 'buyer', 1),
+('Priya Singh', 'priyasingh2', 'hash2', '9823456781', 'seller', 2),
+('Amit Patel', 'amitpatel3', 'hash3', '9834567892', 'buyer', 3),
+('Sunita Rao', 'sunitarao4', 'hash4', '9845678903', 'seller', 4),
+('Vijay Kumar', 'vijaykumar5', 'hash5', '9856789014', 'buyer', 5),
+('Anita Desai', 'anitadesai6', 'hash6', '9867890125', 'seller', 6),
+('Mohit Sharma', 'mohitsharma7', 'hash7', '9878901236', 'buyer', 7),
+('Kavita Krishnan', 'kavitakrishnan8', 'hash8', '9889012347', 'seller', 8),
+('Rahul Mehta', 'rahulmehta9', 'hash9', '9890123458', 'buyer', 9),
+('Deepika Iyer', 'deepikaiyer10', 'hash10', '9801234569', 'seller', 10);
 COMMIT;
+
 
 
 
@@ -74,13 +74,13 @@ INSERT INTO "Customer_Feedback" ("item_id", "user_id", "rating", "comment", "dat
 COMMIT;
 
 BEGIN TRANSACTION;
-INSERT INTO Users (name, login_id, hashed_password, phone, role, deleted, prime_membership) VALUES
-('Ramesh Kumar', 'ramesh@example.com', 'hashedpass123', '+91 9876543210', 'buyer', 0, 1),
-('Suresh Singh', 'suresh@example.com', 'hashedpass456', '+91 8765432109', 'seller', 0, 0),
-('Meera Patel', 'meera@example.com', 'hashedpass789', '+91 7654321098', 'both', 0, 1),
-('Priya Gupta', 'priya@example.com', 'hashedpass987', '+91 6543210987', 'buyer', 0, 0),
-('Amit Verma', 'amit@example.com', 'hashedpass654', '+91 5432109876', 'seller', 0, 1),
-('John Doe', 'john@example.com', 'hashedpass123', '+91 1234567890', 'seller', 0, 0);
+INSERT INTO Users (name, login_id, hashed_password, phone, role, deleted, prime_membership, location_id) VALUES
+('Ramesh Kumar', 'ramesh@example.com', 'hashedpass123', '+91 9876543210', 'buyer', 0, 1, 1),
+('Suresh Singh', 'suresh@example.com', 'hashedpass456', '+91 8765432109', 'seller', 0, 0, 1),
+('Meera Patel', 'meera@example.com', 'hashedpass789', '+91 7654321098', 'both', 0, 1, 2),
+('Priya Gupta', 'priya@example.com', 'hashedpass987', '+91 6543210987', 'buyer', 0, 0,3),
+('Amit Verma', 'amit@example.com', 'hashedpass654', '+91 5432109876', 'seller', 0, 1, 1),
+('John Doe', 'john@example.com', 'hashedpass123', '+91 1234567890', 'seller', 0, 0, 4);
 COMMIT;
 
 BEGIN TRANSACTION;
@@ -105,9 +105,9 @@ COMMIT;
 
 
 BEGIN TRANSACTION;
-INSERT INTO Shipping (shipping_method, street_name, city_name, zip_code) VALUES
-(1, '789 Beach Rd', 'Goa', '403001'),
-(2, '456 Lake St', 'Bengaluru', '560001');
+INSERT INTO Shipping (shipping_method, location_id) VALUES
+(1, 3),
+(2, 4);
 COMMIT;
 
 
@@ -148,15 +148,15 @@ COMMIT;
 
 
 BEGIN TRANSACTION;
-INSERT INTO Users (name, login_id, hashed_password, phone, role, deleted, prime_membership) VALUES
-('John Doe', 'john1@example.com', 'hashedpass123', '+91 1234567891', 'seller', 0, 0);
+INSERT INTO Users (name, login_id, hashed_password, phone, role, deleted, prime_membership, location_id) VALUES
+('John Doe', 'john1@example.com', 'hashedpass123', '+91 1234567891', 'seller', 0, 0, 3);
 COMMIT;
 
 
 
 BEGIN TRANSACTION;
-INSERT INTO Sellers (user_id, state_taxID, national_taxID, account_no, IFSC_no, bank_branch) VALUES
-((SELECT id FROM Users WHERE name = 'John Doe'), '1234567890', 'IN0987654321', '1234567890123456', 'IFSC001', 'Main Branch');
+INSERT INTO Sellers (user_id, national_taxID, account_no, IFSC_no, bank_branch) VALUES
+((SELECT id FROM Users WHERE name = 'John Doe'),  'IN0987654321', '1234567890123456', 'IFSC001', 'Main Branch');
 COMMIT;
 
 
@@ -187,9 +187,9 @@ COMMIT;
 
 
 BEGIN TRANSACTION;
-INSERT INTO Shipping (shipping_method, street_name, city_name, zip_code) VALUES
-(1, '101 River Rd', 'Pune', '411001'),
-(2, '789 Park St', 'Kolkata', '700001');
+INSERT INTO Shipping (shipping_method, location_id) VALUES
+(1, 4),
+(2, 3);
 COMMIT;
 
 BEGIN TRANSACTION;
@@ -211,3 +211,22 @@ INSERT INTO Items (item_price, item_name, quantity, condition, vendor_id) VALUES
 (250.00, 'Bluetooth Speaker', 20, 'good', 1),
 (100.00, 'USB Flash Drive', 30, 'good', 2);
 COMMIT;
+
+BEGIN TRANSACTION;
+	INSERT INTO ShippingMethods (method_id, method_name)
+	VALUES
+	(1, "by land"),
+	(2, "by air"),
+	(3, "by water");
+COMMIT;
+
+INSERT INTO Warehouses (warehouse_name, location_id)
+VALUES ('Warehouse A', 1),
+       ('Warehouse B', 2),
+       ('Warehouse C', 3),
+       ('Warehouse D', 4),
+       ('Warehouse E', 5);
+
+
+INSERT INTO ItemsWarehouses(item_id, warehouse_id)
+VALUES (1,2)
